@@ -1,5 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+
+const BACK_MAP: Record<string, string> = {
+  "/customer/dashboard":      "/",
+  "/customer/accounts":       "/customer/dashboard",
+  "/customer/loans":          "/customer/dashboard",
+  "/customer/transfer":       "/customer/dashboard",
+  "/customer/payees":         "/customer/dashboard",
+  "/customer/profile":        "/customer/dashboard",
+  "/customer/deposit":        "/customer/dashboard",
+  "/customer/create-account": "/customer/accounts",
+  "/customer/request-loan":   "/customer/loans",
+  "/employee/dashboard":      "/",
+  "/employee/transactions":   "/employee/dashboard",
+  "/employee/accounts":       "/employee/dashboard",
+  "/employee/loans":          "/employee/dashboard",
+  "/employee/manager":        "/employee/dashboard",
+  "/employee/create-account": "/employee/dashboard",
+  "/employee/profile":        "/employee/dashboard",
+};
 
 type NavItem = {
   href: string;
@@ -11,6 +33,8 @@ type HeaderAction = {
   href?: string;
   label: string;
   primary?: boolean;
+  signOut?: boolean;
+  signOutRedirect?: string;
 };
 
 type StatItem = {
@@ -37,6 +61,17 @@ export default function PortalShell({
   stats = [],
   children,
 }: PortalShellProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const backHref = BACK_MAP[pathname] ?? "/";
+
+  function handleSignOut(redirect: string) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    document.cookie = "token=; path=/; max-age=0";
+    router.push(redirect);
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen w-full flex-col px-4 py-4 sm:px-6 lg:px-8">
@@ -65,24 +100,35 @@ export default function PortalShell({
           </aside>
 
           <div className="space-y-8">
+            <Link
+              href={backHref}
+              className="flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              Back
+            </Link>
             <header className="rounded-2xl bg-[linear-gradient(135deg,#f8fafc_0%,#ecfeff_48%,#f0fdf4_100%)] px-8 py-7 shadow-sm ring-1 ring-slate-200 sm:px-10">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="max-w-3xl">
-                  <p className="text-sm font-medium text-slate-600">
-                    {sectionLabel}
-                  </p>
+                  <p className="text-sm font-medium text-slate-600">{sectionLabel}</p>
                   <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
                     {title}
                   </h1>
-                  <p className="mt-4 text-base leading-7 text-slate-600">
-                    {description}
-                  </p>
+                  <p className="mt-4 text-base leading-7 text-slate-600">{description}</p>
                 </div>
 
-                {headerActions.length > 0 ? (
+                {headerActions.length > 0 && (
                   <div className="flex flex-wrap gap-3 sm:justify-end">
                     {headerActions.map((action) =>
-                      action.href ? (
+                      action.signOut ? (
+                        <button
+                          key={action.label}
+                          onClick={() => handleSignOut(action.signOutRedirect ?? "/login")}
+                          className="inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium whitespace-nowrap text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
+                        >
+                          {action.label}
+                        </button>
+                      ) : action.href ? (
                         <Link
                           key={action.label}
                           href={action.href}
@@ -108,11 +154,11 @@ export default function PortalShell({
                       ),
                     )}
                   </div>
-                ) : null}
+                )}
               </div>
             </header>
 
-            {stats.length > 0 ? (
+            {stats.length > 0 && (
               <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {stats.map((stat) => (
                   <div
@@ -124,7 +170,7 @@ export default function PortalShell({
                   </div>
                 ))}
               </section>
-            ) : null}
+            )}
 
             {children}
           </div>

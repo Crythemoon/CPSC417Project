@@ -59,7 +59,7 @@ export default function EmployeePortal({
           label: "Review transactions",
           primary: true,
         },
-        { href: "/employee/login", label: "Sign out" },
+        { label: "Sign out", signOut: true, signOutRedirect: "/employee/login" },
       ]}
       stats={stats}
     >

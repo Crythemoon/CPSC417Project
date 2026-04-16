@@ -1,6 +1,54 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+        return;
+      }
+
+      const role = data.user?.role;
+
+      if (role === "employee" || role === "manager") {
+        setError("This portal is for customers only. Please use the employee sign-in page.");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      document.cookie = `token=${data.token}; path=/; max-age=28800`;
+
+      router.push("/customer/dashboard");
+    } catch {
+      setError("Network error — is the server running?");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8 sm:px-8 lg:px-10">
@@ -9,7 +57,6 @@ export default function LoginPage() {
             <p className="text-lg font-semibold">Our Bank Name</p>
             <p className="text-sm text-slate-500">Customer online banking</p>
           </div>
-
           <Link
             href="/"
             className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
@@ -40,7 +87,13 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <form className="mt-8 space-y-5">
+              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+                {error && (
+                  <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+                    {error}
+                  </div>
+                )}
+
                 <div>
                   <label
                     htmlFor="email"
@@ -53,6 +106,9 @@ export default function LoginPage() {
                     name="email"
                     type="email"
                     placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     className="w-full rounded-md border border-slate-300 px-4 py-3 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900"
                   />
                 </div>
@@ -69,37 +125,25 @@ export default function LoginPage() {
                     name="password"
                     type="password"
                     placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                     className="w-full rounded-md border border-slate-300 px-4 py-3 text-sm outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900"
                   />
                 </div>
 
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <label className="flex items-center gap-2 text-slate-600">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-slate-300 text-slate-900"
-                    />
-                    Remember me
-                  </label>
-
-                  <a href="#" className="text-slate-700 hover:text-slate-900">
-                    Forgot password?
-                  </a>
-                </div>
-
-                <Link
-                  href="/customer/dashboard"
-                  className="block w-full rounded-md bg-slate-900 px-5 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="block w-full rounded-md bg-slate-900 px-5 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
                 >
-                  Sign in
-                </Link>
+                  {loading ? "Signing in…" : "Sign in"}
+                </button>
               </form>
 
               <div className="mt-8 space-y-4 rounded-xl bg-slate-50 p-5 ring-1 ring-slate-200">
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
-                    New customer?
-                  </p>
+                  <p className="text-sm font-medium text-slate-700">New customer?</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Create a customer account to start online banking access.
                   </p>
@@ -112,9 +156,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="border-t border-slate-200 pt-4">
-                  <p className="text-sm font-medium text-slate-700">
-                    Employee access
-                  </p>
+                  <p className="text-sm font-medium text-slate-700">Employee access</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Staff and managers should use the employee sign-in page.
                   </p>
