@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ThemeToggleIcon } from "@/components/theme-toggle";
 
 export default function EmployeeLoginPage() {
   const router = useRouter();
@@ -50,26 +51,21 @@ export default function EmployeeLoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen text-slate-900" style={{ background: "var(--paper)" }}>
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8 sm:px-8 lg:px-10">
         <header className="flex items-center justify-between border-b border-slate-200 pb-5">
-          <div>
-            <p className="text-lg font-semibold">Our Bank Name</p>
-            <p className="text-sm text-slate-500">Employee and manager sign in</p>
+          <div className="keel-wordmark" style={{ fontSize: 20 }}>Our Bank Name</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <ThemeToggleIcon />
+            <Link href="/login" className="keel-btn ghost" style={{ padding: "8px 16px" }}>Customer sign in</Link>
           </div>
-          <Link
-            href="/login"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
-          >
-            Customer sign in
-          </Link>
         </header>
 
         <section className="flex flex-1 items-center py-12">
           <div className="grid w-full gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-2xl bg-[linear-gradient(135deg,#f8fafc_0%,#ecfeff_45%,#f0fdf4_100%)] px-8 py-8 shadow-sm ring-1 ring-slate-200 sm:px-10">
-              <p className="text-sm font-medium text-slate-600">Staff sign in</p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+            <div className="rounded-2xl px-8 py-10 ring-1 ring-slate-200 sm:px-10" style={{ background: "var(--paper-2)" }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--ink-4)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Staff sign in</p>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(32px,4vw,52px)", fontWeight: 300, lineHeight: 1.05, letterSpacing: "-0.026em", marginTop: 16, color: "var(--ink)" }}>
                 Open employee management tools.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
