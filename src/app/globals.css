@@ -21,7 +21,7 @@
 
   --serif: var(--font-fraunces), "Source Serif Pro", Georgia, serif;
   --sans:  var(--font-inter-tight), "Inter", -apple-system, system-ui, sans-serif;
-  --mono:  var(--font-jetbrains-mono), ui-monospace, "SF Mono", monospace;
+  --mono:  var(--font-ibm-plex-mono), ui-monospace, "SF Mono", monospace;
 
   --r-sm: 4px;
   --r-md: 8px;
