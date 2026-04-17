@@ -11,7 +11,8 @@ router.post("/", requireAuth, async (req, res) => {
     const userId = req.user.userId;
     const { fromAccountId, toAccountId, amount } = req.body;
 
-    if (!fromAccountId || !toAccountId || !amount || Number(amount) <= 0) {
+    const parsedAmount = Number(amount);
+    if (!fromAccountId || !toAccountId || !amount || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       connection.release();
       return res.status(400).json({ error: "fromAccountId, toAccountId, and positive amount required" });
     }
@@ -35,7 +36,7 @@ router.post("/", requireAuth, async (req, res) => {
       connection.release();
       return res.status(400).json({ error: "Source account is not active" });
     }
-    if (Number(srcRows[0].Balance) < Number(amount)) {
+    if (Number(srcRows[0].Balance) < parsedAmount) {
       connection.release();
       return res.status(400).json({ error: "Insufficient funds" });
     }
@@ -57,12 +58,12 @@ router.post("/", requireAuth, async (req, res) => {
     await connection.beginTransaction();
 
     const [[{ nextId }]] = await connection.query(
-      "SELECT COALESCE(MAX(TransactionID), 0) + 1 AS nextId FROM `Transaction`"
+      "SELECT COALESCE(MAX(TransactionID), 0) + 1 AS nextId FROM `Transaction` FOR UPDATE"
     );
 
     await connection.execute(
       "INSERT INTO `Transaction` (TransactionID, `Timestamp`, Amount, UserID) VALUES (?, NOW(), ?, ?)",
-      [nextId, amount, userId]
+      [nextId, parsedAmount, userId]
     );
     await connection.execute("INSERT INTO Transfer (TransactionID) VALUES (?)", [nextId]);
     await connection.execute("INSERT INTO Logs (TransactionID, AccountID) VALUES (?, ?)", [nextId, fromAccountId]);
@@ -70,11 +71,11 @@ router.post("/", requireAuth, async (req, res) => {
 
     await connection.execute(
       "UPDATE Account SET Balance = Balance - ? WHERE AccountID = ?",
-      [amount, fromAccountId]
+      [parsedAmount, fromAccountId]
     );
     await connection.execute(
       "UPDATE Account SET Balance = Balance + ? WHERE AccountID = ?",
-      [amount, toAccountId]
+      [parsedAmount, toAccountId]
     );
 
     await connection.commit();

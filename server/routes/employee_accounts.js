@@ -1,11 +1,11 @@
 const express = require("express");
 const pool = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
 // GET /api/employee/accounts — all customer accounts with owner name
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", requireAuth, requireRole("employee", "manager"), async (req, res) => {
   try {
     const [rows] = await pool.execute(
       `SELECT
@@ -38,7 +38,7 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // PATCH /api/employee/accounts/:id — update account status (freeze/unfreeze)
-router.patch("/:id", requireAuth, async (req, res) => {
+router.patch("/:id", requireAuth, requireRole("employee", "manager"), async (req, res) => {
   try {
     const accountId = Number(req.params.id);
     const { status } = req.body;

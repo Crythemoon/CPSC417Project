@@ -1,11 +1,11 @@
 const express = require("express");
 const pool = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
 // GET /api/employee/transactions
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", requireAuth, requireRole("employee", "manager"), async (req, res) => {
   try {
     const [rows] = await pool.execute(
       `SELECT

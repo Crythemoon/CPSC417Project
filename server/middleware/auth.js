@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_in_production";
+if (!process.env.JWT_SECRET) {
+  console.warn("WARNING: JWT_SECRET env var is not set. Using insecure default.");
+}
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -27,4 +30,4 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { requireAuth, requireRole };
+module.exports = { requireAuth, requireRole, JWT_SECRET };

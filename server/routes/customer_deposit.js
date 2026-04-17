@@ -11,7 +11,8 @@ router.post("/", requireAuth, async (req, res) => {
     const userId = req.user.userId;
     const { accountId, amount } = req.body;
 
-    if (!accountId || !amount || Number(amount) <= 0) {
+    const parsedAmount = Number(amount);
+    if (!accountId || !amount || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       connection.release();
       return res.status(400).json({ error: "accountId and positive amount required" });
     }
@@ -36,12 +37,12 @@ router.post("/", requireAuth, async (req, res) => {
 
     // Get next transaction ID
     const [[{ nextId }]] = await connection.query(
-      "SELECT COALESCE(MAX(TransactionID), 0) + 1 AS nextId FROM `Transaction`"
+      "SELECT COALESCE(MAX(TransactionID), 0) + 1 AS nextId FROM `Transaction` FOR UPDATE"
     );
 
     await connection.execute(
       "INSERT INTO `Transaction` (TransactionID, `Timestamp`, Amount, UserID) VALUES (?, NOW(), ?, ?)",
-      [nextId, amount, userId]
+      [nextId, parsedAmount, userId]
     );
     await connection.execute(
       "INSERT INTO Deposit (TransactionID) VALUES (?)",
@@ -53,7 +54,7 @@ router.post("/", requireAuth, async (req, res) => {
     );
     await connection.execute(
       "UPDATE Account SET Balance = Balance + ? WHERE AccountID = ?",
-      [amount, accountId]
+      [parsedAmount, accountId]
     );
 
     await connection.commit();
