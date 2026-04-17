@@ -48,7 +48,7 @@ Make sure you have these installed:
 
 ```bash
 git clone <your-repo-url>
-cd 471-final-banking-app/demo-app
+cd <repo-folder>/demo-app
 ```
 
 ### 2. Install frontend dependencies
