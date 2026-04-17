@@ -41,14 +41,14 @@ CREATE TABLE User_Address (
     Province VARCHAR(100) NOT NULL,
     Postal_code VARCHAR(20) NOT NULL,
     PRIMARY KEY (UserID, Street, City, Province, Postal_code),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Customer (
     UserID INT NOT NULL,
     SSN VARCHAR(20) NOT NULL,
     PRIMARY KEY (UserID),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID)
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Branch (
@@ -66,12 +66,13 @@ CREATE TABLE Employee (
     UserID INT NOT NULL,
     EmergencyNo VARCHAR(20),
     Role VARCHAR(50),
+    SSN VARCHAR(20) NOT NULL,
     BranchID INT,
     SupervisorID INT,
     PRIMARY KEY (UserID),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID),
-    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID),
-    FOREIGN KEY (SupervisorID) REFERENCES Employee(UserID)
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (SupervisorID) REFERENCES Employee(UserID) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Dependent (
@@ -80,7 +81,7 @@ CREATE TABLE Dependent (
     Relationship VARCHAR(50),
     DOB DATE NOT NULL,
     PRIMARY KEY (UserID, Name, DOB),
-    FOREIGN KEY (UserID) REFERENCES Employee(UserID)
+    FOREIGN KEY (UserID) REFERENCES Employee(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Department (
@@ -90,15 +91,15 @@ CREATE TABLE Department (
     UserID INT,
     Start_Date DATE,
     PRIMARY KEY (DepartmentID),
-    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID),
-    FOREIGN KEY (UserID) REFERENCES Employee(UserID)
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES Employee(UserID) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Depart_Location (
     DepartmentID INT NOT NULL,
     Location VARCHAR(100) NOT NULL,
     PRIMARY KEY (DepartmentID, Location),
-    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Account (
@@ -113,14 +114,14 @@ CREATE TABLE Savings_acct (
     AccountID INT NOT NULL,
     Interest_rate DECIMAL(5,2),
     PRIMARY KEY (AccountID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Checking_acct (
     AccountID INT NOT NULL,
     Overdraft_limit DECIMAL(15,2),
     PRIMARY KEY (AccountID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Loan (
@@ -128,7 +129,7 @@ CREATE TABLE Loan (
     Amount DECIMAL(15,2) NOT NULL,
     BranchID INT,
     PRIMARY KEY (Loan_No),
-    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID)
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Payee (
@@ -144,56 +145,56 @@ CREATE TABLE Transaction (
     Amount DECIMAL(15,2) NOT NULL,
     UserID INT,
     PRIMARY KEY (TransactionID),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID)
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Transfer (
     TransactionID INT NOT NULL,
     PRIMARY KEY (TransactionID),
-    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID)
+    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Deposit (
 TransactionID INT NOT NULL,
 PRIMARY KEY (TransactionID),
-FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID)
+FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DElETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE Withdraw (
 TransactionID INT NOT NULL,
 PRIMARY KEY (TransactionID),
-FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID)
+FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Owns (
     UserID INT NOT NULL,
     AccountID INT NOT NULL,
     PRIMARY KEY (UserID, AccountID),
-    FOREIGN KEY (UserID) REFERENCES Customer(UserID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (UserID) REFERENCES Customer(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Obtains (
     Customer_UserID INT NOT NULL,
     Loan_No INT NOT NULL,
     PRIMARY KEY (Customer_UserID, Loan_No),
-    FOREIGN KEY (Customer_UserID) REFERENCES Customer(UserID),
-    FOREIGN KEY (Loan_No) REFERENCES Loan(Loan_No)
+    FOREIGN KEY (Customer_UserID) REFERENCES Customer(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Loan_No) REFERENCES Loan(Loan_No) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Pays (
     UserID INT NOT NULL,
     Payee_id INT NOT NULL,
     PRIMARY KEY (UserID, Payee_id),
-    FOREIGN KEY (UserID) REFERENCES Customer(UserID),
-    FOREIGN KEY (Payee_id) REFERENCES Payee(Payee_id)
+    FOREIGN KEY (UserID) REFERENCES Customer(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Payee_id) REFERENCES Payee(Payee_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Logs (
     TransactionID INT NOT NULL,
     AccountID INT NOT NULL,
     PRIMARY KEY (TransactionID, AccountID),
-    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO `User` (UserID, Name, Phone, Email, Password_hash)
@@ -203,8 +204,8 @@ INSERT INTO Branch (BranchID, Name, Phone, Street, City, Province, Postal_Code)
 VALUES (1, 'Downtown Branch', '555-9999', '123 Main St', 'Calgary', 'AB', 'T2N 2V1');
 INSERT INTO Customer (UserID, SSN)
 VALUES (101, '123-456-7890');
-INSERT INTO Employee (UserID, EmergencyNo, Role, BranchID, SupervisorID)
-VALUES (102, '555-0999', 'Teller', 1, NULL);
+INSERT INTO Employee (UserID, EmergencyNo, Role, BranchID, SupervisorID, SSN)
+VALUES (102, '555-0999', 'Teller', 1, NULL, '987-654-3210');
 INSERT INTO Account (AccountID, Status, Balance, OpenDate)
 VALUES (5001, 'Active', 2500.00, '2026-03-15');
 INSERT INTO Owns (UserID, AccountID)
