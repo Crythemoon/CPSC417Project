@@ -40,9 +40,8 @@ function txBadge(type: string) {
 }
 
 const managerTasks = [
-  { title: "Assign tasks", detail: "Route loan reviews and transaction checks to employees.", action: "Manage assignments", href: "/employee/manager" },
-  { title: "Department details", detail: "View staffing, branch unit information, and supervision needs.", action: "View department", href: "/employee/manager" },
   { title: "Loan overrides", detail: "Change or override loan decisions when elevated approval is needed.", action: "Open overrides", href: "/employee/manager" },
+  { title: "Create staff account", detail: "Set up login credentials, assign a role and branch, and add dependent info for a new employee.", action: "Create employee account", href: "/employee/create-account" },
 ];
 
 export default function EmployeeDashboardPage() {

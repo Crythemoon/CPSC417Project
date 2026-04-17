@@ -19,6 +19,12 @@ export default function CustomerProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Password change state
+  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
+
   useEffect(() => {
     apiFetch("/api/customer/profile")
       .then((data: Profile) => {
@@ -28,6 +34,34 @@ export default function CustomerProfilePage() {
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false));
   }, []);
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault();
+    setPwError("");
+    setPwSuccess("");
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwError("New passwords do not match.");
+      return;
+    }
+    if (pwForm.newPassword.length < 8) {
+      setPwError("New password must be at least 8 characters.");
+      return;
+    }
+    setPwSaving(true);
+    try {
+      const data = await apiFetch("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+      });
+      if (data.error) { setPwError(data.error); return; }
+      setPwSuccess("Password changed successfully.");
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch {
+      setPwError("Failed to change password.");
+    } finally {
+      setPwSaving(false);
+    }
+  }
 
   function set(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -127,6 +161,43 @@ export default function CustomerProfilePage() {
             >
               {saving ? "Saving…" : "Save changes"}
             </button>
+          </form>
+        </div>
+
+        {/* Password change — spans full width */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-full">
+          <p className="text-sm font-medium text-slate-600">Security</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight">Change password</h2>
+
+          {pwSuccess && (
+            <div className="mt-4 rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700 ring-1 ring-emerald-200">{pwSuccess}</div>
+          )}
+          {pwError && (
+            <div className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">{pwError}</div>
+          )}
+
+          <form className="mt-6 grid gap-4 sm:grid-cols-3" onSubmit={handlePasswordChange}>
+            <div>
+              <label className={labelCls}>Current password</label>
+              <input type="password" value={pwForm.currentPassword} onChange={(e) => setPwForm((p) => ({ ...p, currentPassword: e.target.value }))} required className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>New password</label>
+              <input type="password" value={pwForm.newPassword} onChange={(e) => setPwForm((p) => ({ ...p, newPassword: e.target.value }))} required minLength={8} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Confirm new password</label>
+              <input type="password" value={pwForm.confirmPassword} onChange={(e) => setPwForm((p) => ({ ...p, confirmPassword: e.target.value }))} required minLength={8} className={inputCls} />
+            </div>
+            <div className="sm:col-span-3">
+              <button
+                type="submit"
+                disabled={pwSaving}
+                className="rounded-md bg-slate-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+              >
+                {pwSaving ? "Updating…" : "Change password"}
+              </button>
+            </div>
           </form>
         </div>
       </div>

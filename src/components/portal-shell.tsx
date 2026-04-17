@@ -12,6 +12,8 @@ const BACK_MAP: Record<string, string> = {
   "/customer/payees":         "/customer/dashboard",
   "/customer/profile":        "/customer/dashboard",
   "/customer/deposit":        "/customer/dashboard",
+  "/customer/withdraw":       "/customer/dashboard",
+  "/customer/transactions":   "/customer/dashboard",
   "/customer/create-account": "/customer/accounts",
   "/customer/request-loan":   "/customer/loans",
   "/employee/dashboard":      "/",

@@ -41,11 +41,7 @@ export default function EmployeeLoginPage() {
       localStorage.setItem("user", JSON.stringify(data.user));
       document.cookie = `token=${data.token}; path=/; max-age=28800`;
 
-      if (role === "manager") {
-        router.push("/employee/manager");
-      } else {
-        router.push("/employee/dashboard");
-      }
+      router.push("/employee/dashboard");
     } catch {
       setError("Network error — is the server running?");
     } finally {
@@ -147,15 +143,8 @@ export default function EmployeeLoginPage() {
               <div className="mt-8 rounded-xl bg-slate-50 p-5 ring-1 ring-slate-200">
                 <p className="text-sm font-medium text-slate-700">Need staff access?</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Create a new employee account and include dependent details as
-                  part of onboarding.
+                  Contact your manager to have an employee account created for you.
                 </p>
-                <Link
-                  href="/employee/create-account"
-                  className="mt-4 inline-block rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900"
-                >
-                  Create employee account
-                </Link>
               </div>
             </div>
           </div>

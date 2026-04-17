@@ -7,7 +7,8 @@ type EmployeePortalProps = {
     | "transactions"
     | "accounts"
     | "loans"
-    | "manager";
+    | "manager"
+    | "profile";
   title: string;
   description: string;
   children: ReactNode;
@@ -27,38 +28,15 @@ export default function EmployeePortal({
       title={title}
       description={description}
       navItems={[
-        {
-          href: "/employee/dashboard",
-          label: "Dashboard",
-          active: activePage === "dashboard",
-        },
-        {
-          href: "/employee/transactions",
-          label: "Transactions",
-          active: activePage === "transactions",
-        },
-        {
-          href: "/employee/accounts",
-          label: "Accounts",
-          active: activePage === "accounts",
-        },
-        {
-          href: "/employee/loans",
-          label: "Loans",
-          active: activePage === "loans",
-        },
-        {
-          href: "/employee/manager",
-          label: "Manager tools",
-          active: activePage === "manager",
-        },
+        { href: "/employee/dashboard",    label: "Dashboard",    active: activePage === "dashboard" },
+        { href: "/employee/transactions", label: "Transactions", active: activePage === "transactions" },
+        { href: "/employee/accounts",     label: "Accounts",     active: activePage === "accounts" },
+        { href: "/employee/loans",        label: "Loans",        active: activePage === "loans" },
+        { href: "/employee/manager",      label: "Manager tools", active: activePage === "manager" },
+        { href: "/employee/profile",      label: "Profile",      active: activePage === "profile" },
       ]}
       headerActions={[
-        {
-          href: "/employee/transactions",
-          label: "Review transactions",
-          primary: true,
-        },
+        { href: "/employee/transactions", label: "Review transactions", primary: true },
         { label: "Sign out", signOut: true, signOutRedirect: "/employee/login" },
       ]}
       stats={stats}

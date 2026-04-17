@@ -145,4 +145,47 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+// POST /api/auth/change-password
+router.post("/change-password", async (req, res) => {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const jwt = require("jsonwebtoken");
+  let userId;
+  try {
+    const payload = jwt.verify(authHeader.slice(7), JWT_SECRET);
+    userId = payload.userId;
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "currentPassword and newPassword required" });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "New password must be at least 8 characters" });
+    }
+
+    const [rows] = await pool.execute(
+      "SELECT Password_hash FROM `User` WHERE UserID = ?",
+      [userId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: "User not found" });
+
+    const match = await bcrypt.compare(currentPassword, rows[0].Password_hash);
+    if (!match) return res.status(401).json({ error: "Current password is incorrect" });
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await pool.execute("UPDATE `User` SET Password_hash = ? WHERE UserID = ?", [newHash, userId]);
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to change password" });
+  }
+});
+
 module.exports = router;
