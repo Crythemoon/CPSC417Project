@@ -159,4 +159,52 @@ router.post("/signup", async (req, res) => {
     }
 });
 
+router.post("/employee/signup", async (req, res) => {
+      const connection = await pool.getConnection();
+
+      try {
+          const{name,phone,email,password,ssn,branchID,supervisorID} = req.body;
+
+          if (!name || !email || !password || !ssn || !branchID || !supervisorID) {
+              return res.status(400).json({ error: "Missing required fields" });
+          }
+
+          const passwordHash = hashPassword(password);
+
+          const [existing] = await connection.execute(
+              "SELECT UserID FROM Employee WHERE SSN = ?",
+              [ssn]
+          );
+
+          if (existing.length > 0) {
+              connection.release();
+              return res.status(409).json({ error: "SSN already in use" });
+          }
+
+          await connection.beginTransaction();
+
+          //Insert into User table
+          const [UserResult] = await connection.execute(
+              `
+              INSERT INTO User (Name, Phone, Email, Password_hash)
+              VALUES (?, ?, ?, ?)
+              `,
+              [name, phone, email, passwordHash]
+          );
+
+          const userId = UserResult.insertId;
+          
+          //Insert into Employee table
+          await connection.execute(
+              `
+              INSERT INTO Employee (UserID, EmergencyNo, Role, BranchID, SupervisorID, SSN)
+              VALUES (?, ?, 'Teller', ?, ?, ?)
+              `,
+              [userId, phone, branchID, supervisorID, ssn]
+          );
+      } catch (error) {
+        
+      }
+    });
+
 module.exports = router;
