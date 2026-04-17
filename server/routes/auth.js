@@ -38,7 +38,7 @@ router.post("/login", async (req, res) => {
     const user = rows[0];
     const hashed = hashPassword(password);
 
-    if (hashed !== user.PasswordHash) {
+    if (hashed !== user.Password_hash) {
       return res.status(401).json({
         error: "Invalid credentials",
       });
@@ -119,7 +119,7 @@ router.post("/signup", async (req, res) => {
         await connection.execute(
             `
             INSERT INTO Customer (UserID, SSN)
-            VALUES (, ?)
+            VALUES (?, ?)
             `,
             [userId, ssn]
         );

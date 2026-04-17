@@ -4,9 +4,9 @@ const pool = require("../db");
 const router = express.Router();
 
 
-router.get("/", async (req, res) => {
+router.get('/account_detail/:id', async (req, res) => {
   try {
-    const userId = Number(req.query.userId);
+    const userId = Number(req.params.id);
 
     if (!userId) {
       return res.status(400).json({
@@ -47,10 +47,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:accountId", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const accountId = Number(req.params.accountId);
-    const userId = Number(req.query.userId);
+    const accountId = Number(req.params.id);
+    const userId = Number(req.query.id);
 
     if (!accountId || !userId) {
       return res.status(400).json({
