@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
+import { Playfair_Display, Inter_Tight, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const playfairDisplay = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${interTight.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      className={`${playfairDisplay.variable} ${interTight.variable} ${ibmPlexMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       {/* Apply stored theme before first paint to prevent flash */}

@@ -12,14 +12,14 @@
   --paper-2:   #EFE8DC;
   --paper-3:   #FAF6EE;
   --card:      #FFFFFF;
-  --accent:    oklch(0.64 0.11 62);
-  --accent-2:  oklch(0.54 0.11 62);
-  --accent-ink:#2B1F10;
+  --accent:    oklch(0.38 0.13 15);
+  --accent-2:  oklch(0.30 0.13 15);
+  --accent-ink:#FFFFFF;
   --positive:  oklch(0.55 0.09 150);
   --negative:  oklch(0.55 0.15 30);
   --info:      oklch(0.52 0.09 240);
 
-  --serif: var(--font-fraunces), "Source Serif Pro", Georgia, serif;
+  --serif: var(--font-playfair), "Playfair Display", Georgia, serif;
   --sans:  var(--font-inter-tight), "Inter", -apple-system, system-ui, sans-serif;
   --mono:  var(--font-ibm-plex-mono), ui-monospace, "SF Mono", monospace;
 
@@ -94,7 +94,7 @@
   --paper-2:   #1C1915;
   --paper-3:   #24201B;
   --card:      #1A1714;
-  --accent-ink:#1A1714;
+  --accent-ink:#FFFFFF;
 
   /* Re-map Tailwind slate scale to dark Keel tones.
      Works because @theme (without inline) generates var() references. */
@@ -113,6 +113,11 @@
 /* bg-white on cards needs an explicit override since white isn't a variable */
 [data-theme="dark"] .bg-white {
   background-color: var(--card);
+}
+
+[data-theme="dark"] .keel-nav-item.active {
+  background: var(--accent);
+  color: #FFFFFF;
 }
 
 /* Primary action buttons use bg-slate-900 text-white — in dark mode
