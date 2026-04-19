@@ -65,7 +65,7 @@ router.post("/", requireAuth, async (req, res) => {
       "INSERT INTO `Transaction` (TransactionID, `Timestamp`, Amount, UserID) VALUES (?, NOW(), ?, ?)",
       [nextId, parsedAmount, userId]
     );
-    await connection.execute("INSERT INTO Transfer (TransactionID) VALUES (?)", [nextId]);
+    await connection.execute("INSERT INTO Transfer (TransactionID, ToAccountID) VALUES (?, ?)", [nextId, toAccountId]);
     await connection.execute("INSERT INTO Logs (TransactionID, AccountID) VALUES (?, ?)", [nextId, fromAccountId]);
     await connection.execute("INSERT INTO Logs (TransactionID, AccountID) VALUES (?, ?)", [nextId, toAccountId]);
 

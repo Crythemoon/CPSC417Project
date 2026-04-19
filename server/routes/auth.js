@@ -114,7 +114,7 @@ router.post("/signup", async (req, res) => {
 
     const [UserResult] = await connection.execute(
       "INSERT INTO `User` (Name, Phone, Email, Password_hash) VALUES (?, ?, ?, ?)",
-      [name, phone, email, passwordHash]
+      [name, phone ?? null, email, passwordHash]
     );
     const userId = UserResult.insertId;
 
