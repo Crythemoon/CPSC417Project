@@ -37,7 +37,7 @@ router.post("/", requireAuth, async (req, res) => {
     await connection.beginTransaction();
 
     const [[{ nextId }]] = await connection.query(
-      "SELECT COALESCE(MAX(Payee_id), 0) + 1 AS nextId FROM Payee"
+      "SELECT COALESCE(MAX(Payee_id), 0) + 1 AS nextId FROM Payee FOR UPDATE"
     );
     await connection.execute(
       "INSERT INTO Payee (Payee_id, Company_name) VALUES (?, ?)",

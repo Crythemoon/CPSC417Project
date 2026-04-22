@@ -1,11 +1,11 @@
 const express = require("express");
 const pool = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
 // GET /api/employee/loans — all loans with customer name
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", requireAuth, requireRole("employee", "manager"), async (req, res) => {
   try {
     const [rows] = await pool.execute(
       `SELECT
@@ -29,7 +29,7 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // PATCH /api/employee/loans/:id — update loan status
-router.patch("/:id", requireAuth, async (req, res) => {
+router.patch("/:id", requireAuth, requireRole("manager"), async (req, res) => {
   try {
     const loanNo = Number(req.params.id);
     const { status } = req.body;

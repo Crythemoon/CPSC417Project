@@ -11,7 +11,8 @@ router.post("/", requireAuth, async (req, res) => {
     const userId = req.user.userId;
     const { accountId, amount } = req.body;
 
-    if (!accountId || !amount || Number(amount) <= 0) {
+    const parsedAmount = Number(amount);
+    if (!accountId || !amount || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       connection.release();
       return res.status(400).json({ error: "accountId and positive amount required" });
     }
@@ -36,7 +37,7 @@ router.post("/", requireAuth, async (req, res) => {
 
     const balance = Number(owns[0].Balance);
     const overdraft = Number(owns[0].Overdraft_limit ?? 0);
-    const withdrawAmt = Number(amount);
+    const withdrawAmt = parsedAmount;
 
     if (balance + overdraft < withdrawAmt) {
       connection.release();
@@ -46,7 +47,7 @@ router.post("/", requireAuth, async (req, res) => {
     await connection.beginTransaction();
 
     const [[{ nextId }]] = await connection.query(
-      "SELECT COALESCE(MAX(TransactionID), 0) + 1 AS nextId FROM `Transaction`"
+      "SELECT COALESCE(MAX(TransactionID), 0) + 1 AS nextId FROM `Transaction` FOR UPDATE"
     );
 
     await connection.execute(

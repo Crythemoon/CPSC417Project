@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ThemeToggleIcon } from "@/components/theme-toggle";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -44,22 +45,20 @@ export default function SignupPage() {
   const labelCls = "mb-2 block text-sm font-medium text-slate-700";
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen text-slate-900" style={{ background: "var(--paper)" }}>
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-8 sm:px-8 lg:px-10">
         <header className="flex items-center justify-between border-b border-slate-200 pb-5">
-          <div>
-            <p className="text-lg font-semibold">Our Bank Name</p>
-            <p className="text-sm text-slate-500">Customer account creation</p>
+          <div className="keel-wordmark" style={{ fontSize: 20 }}>Our Bank Name</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <ThemeToggleIcon />
+            <Link href="/login" className="keel-btn ghost" style={{ padding: "8px 16px" }}>Back to sign in</Link>
           </div>
-          <Link href="/login" className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900">
-            Back to sign in
-          </Link>
         </header>
 
         <section className="py-12">
-          <div className="rounded-2xl bg-[linear-gradient(135deg,#f8fafc_0%,#ecfeff_45%,#f0fdf4_100%)] px-8 py-8 shadow-sm ring-1 ring-slate-200">
-            <p className="text-sm font-medium text-slate-600">Create customer account</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Start your online banking access.</h1>
+          <div className="rounded-2xl px-8 py-8 ring-1 ring-slate-200" style={{ background: "var(--paper-2)" }}>
+            <p style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--ink-4)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Create customer account</p>
+            <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(28px,4vw,48px)", fontWeight: 300, lineHeight: 1.05, letterSpacing: "-0.026em", marginTop: 12, color: "var(--ink)" }}>Start your online banking access.</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">Open your customer profile, choose your first account type, and get set up for secure online banking access.</p>
           </div>
 

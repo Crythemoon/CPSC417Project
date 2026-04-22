@@ -26,26 +26,39 @@ router.get("/", requireAuth, async (req, res) => {
 
 // POST /api/customer/loans — request a new loan
 router.post("/", requireAuth, async (req, res) => {
+  const connection = await pool.getConnection();
   try {
     const userId = req.user.userId;
     const { amount, branchId } = req.body;
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ error: "Valid amount required" });
+
+    const parsedAmount = Number(amount);
+    if (!amount || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      connection.release();
+      return res.status(400).json({ error: "Valid positive amount required" });
     }
-    const [[{ nextLoanNo }]] = await pool.query(
-      "SELECT COALESCE(MAX(Loan_No), 0) + 1 AS nextLoanNo FROM Loan"
+
+    await connection.beginTransaction();
+
+    const [[{ nextLoanNo }]] = await connection.query(
+      "SELECT COALESCE(MAX(Loan_No), 0) + 1 AS nextLoanNo FROM Loan FOR UPDATE"
     );
-    await pool.execute(
-      `INSERT INTO Loan (Loan_No, Amount, BranchID, Status) VALUES (?, ?, ?, 'Pending')`,
-      [nextLoanNo, amount, branchId || 1]
+
+    await connection.execute(
+      "INSERT INTO Loan (Loan_No, Amount, BranchID, Status) VALUES (?, ?, ?, 'Pending')",
+      [nextLoanNo, parsedAmount, branchId || 1]
     );
-    const loanNo = nextLoanNo;
-    await pool.execute(
-      `INSERT INTO Obtains (Customer_UserID, Loan_No) VALUES (?, ?)`,
-      [userId, loanNo]
+    await connection.execute(
+      "INSERT INTO Obtains (Customer_UserID, Loan_No) VALUES (?, ?)",
+      [userId, nextLoanNo]
     );
-    res.status(201).json({ message: "Loan requested", loanNo, amount, status: "Pending" });
+
+    await connection.commit();
+    connection.release();
+
+    res.status(201).json({ message: "Loan requested", loanNo: nextLoanNo, amount: parsedAmount, status: "Pending" });
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     console.error(err);
     res.status(500).json({ error: "Failed to request loan" });
   }

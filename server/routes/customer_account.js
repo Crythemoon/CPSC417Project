@@ -1,18 +1,13 @@
 const express = require("express");
 const pool = require("../db");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-
-router.get("/", async (req, res) => {
+// GET /api/customer/accounts
+router.get("/", requireAuth, async (req, res) => {
   try {
-    const userId = Number(req.query.userId);
-
-    if (!userId) {
-      return res.status(400).json({
-        error: "userId is required",
-      });
-    }
+    const userId = req.user.userId;
 
     const [rows] = await pool.execute(
       `
@@ -41,21 +36,18 @@ router.get("/", async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error("Failed to fetch accounts:", error.message);
-    res.status(500).json({
-      error: "Failed to fetch accounts",
-    });
+    res.status(500).json({ error: "Failed to fetch accounts" });
   }
 });
 
-router.get("/:accountId", async (req, res) => {
+// GET /api/customer/accounts/:accountId
+router.get("/:accountId", requireAuth, async (req, res) => {
   try {
     const accountId = Number(req.params.accountId);
-    const userId = Number(req.query.userId);
+    const userId = req.user.userId;
 
-    if (!accountId || !userId) {
-      return res.status(400).json({
-        error: "accountId and userId are required",
-      });
+    if (!accountId) {
+      return res.status(400).json({ error: "accountId is required" });
     }
 
     const [rows] = await pool.execute(
@@ -83,98 +75,72 @@ router.get("/:accountId", async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({
-        error: "Account not found",
-      });
+      return res.status(404).json({ error: "Account not found" });
     }
 
     res.json(rows[0]);
   } catch (error) {
     console.error("Failed to fetch account:", error.message);
-    res.status(500).json({
-      error: "Failed to fetch account",
-    });
+    res.status(500).json({ error: "Failed to fetch account" });
   }
 });
 
-router.post("/", async (req, res) => {
+// POST /api/customer/accounts
+router.post("/", requireAuth, async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
-    const { userId, accountType } = req.body;
+    const userId = req.user.userId;
+    const { accountType } = req.body;
 
-    if (!userId || !accountType) {
+    if (!accountType) {
       connection.release();
-      return res.status(400).json({
-        error: "userId and accountType are required",
-      });
+      return res.status(400).json({ error: "accountType is required" });
     }
 
     const validTypes = ["Chequing Account", "Savings Account"];
-
     if (!validTypes.includes(accountType)) {
       connection.release();
-      return res.status(400).json({
-        error: "Invalid account type",
-      });
+      return res.status(400).json({ error: "Invalid account type" });
     }
 
+    // Verify the caller is actually a customer
     const [userRows] = await connection.execute(
-      `
-      SELECT UserID
-      FROM Customer
-      WHERE UserID = ?
-      LIMIT 1
-      `,
+      "SELECT UserID FROM Customer WHERE UserID = ? LIMIT 1",
       [userId]
     );
-
     if (userRows.length === 0) {
       connection.release();
-      return res.status(404).json({
-        error: "Customer not found",
-      });
+      return res.status(403).json({ error: "Only customers can open accounts" });
     }
-
-    const [nextIdRows] = await connection.query(
-      `SELECT COALESCE(MAX(AccountID), 0) + 1 AS nextId FROM Account`
-    );
-
-    const nextAccountId = nextIdRows[0].nextId;
 
     await connection.beginTransaction();
 
+    // Lock the table row to prevent race condition on ID generation
+    const [nextIdRows] = await connection.query(
+      "SELECT COALESCE(MAX(AccountID), 0) + 1 AS nextId FROM Account FOR UPDATE"
+    );
+    const nextAccountId = nextIdRows[0].nextId;
+
     await connection.execute(
-      `
-      INSERT INTO Account (AccountID, Status, Balance, OpenDate)
-      VALUES (?, 'Active', 0.00, CURDATE())
-      `,
+      "INSERT INTO Account (AccountID, Status, Balance, OpenDate) VALUES (?, 'Active', 0.00, CURDATE())",
       [nextAccountId]
     );
 
     if (accountType === "Savings Account") {
       await connection.execute(
-        `
-        INSERT INTO Savings_acct (AccountID, Interest_rate)
-        VALUES (?, ?)
-        `,
+        "INSERT INTO Savings_acct (AccountID, Interest_rate) VALUES (?, ?)",
         [nextAccountId, 1.25]
       );
     } else {
       await connection.execute(
-        `
-        INSERT INTO Checking_acct (AccountID, Overdraft_limit)
-        VALUES (?, ?)
-        `,
+        "INSERT INTO Checking_acct (AccountID, Overdraft_limit) VALUES (?, ?)",
         [nextAccountId, 500.0]
       );
     }
 
     await connection.execute(
-      `
-      INSERT INTO Owns (UserID, AccountID)
-      VALUES (?, ?)
-      `,
+      "INSERT INTO Owns (UserID, AccountID) VALUES (?, ?)",
       [userId, nextAccountId]
     );
 
@@ -193,11 +159,8 @@ router.post("/", async (req, res) => {
   } catch (error) {
     await connection.rollback();
     connection.release();
-
     console.error("Failed to create account:", error.message);
-    res.status(500).json({
-      error: "Failed to create account",
-    });
+    res.status(500).json({ error: "Failed to create account" });
   }
 });
 

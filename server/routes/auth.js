@@ -2,13 +2,32 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../db");
+const { JWT_SECRET } = require("../middleware/auth");
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_in_production";
+// Simple in-memory rate limiter: max 10 attempts per IP per 15 minutes
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX = 10;
+
+function loginRateLimiter(req, res, next) {
+  const ip = req.ip || req.socket?.remoteAddress || "unknown";
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (record && now < record.resetAt) {
+    if (record.count >= LOGIN_MAX) {
+      return res.status(429).json({ error: "Too many login attempts. Please try again later." });
+    }
+    record.count++;
+  } else {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+  }
+  next();
+}
 
 // POST /api/auth/login
-router.post("/login", async (req, res) => {
+router.post("/login", loginRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -95,7 +114,7 @@ router.post("/signup", async (req, res) => {
 
     const [UserResult] = await connection.execute(
       "INSERT INTO `User` (Name, Phone, Email, Password_hash) VALUES (?, ?, ?, ?)",
-      [name, phone, email, passwordHash]
+      [name, phone ?? null, email, passwordHash]
     );
     const userId = UserResult.insertId;
 
@@ -151,7 +170,6 @@ router.post("/change-password", async (req, res) => {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  const jwt = require("jsonwebtoken");
   let userId;
   try {
     const payload = jwt.verify(authHeader.slice(7), JWT_SECRET);
