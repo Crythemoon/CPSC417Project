@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS User_Address;
 DROP TABLE IF EXISTS Customer;
 DROP TABLE IF EXISTS Branch;
 DROP TABLE IF EXISTS Employee;
+DROP TABLE IF EXISTS Assignment;
 DROP TABLE IF EXISTS Dependent;
 DROP TABLE IF EXISTS Department;
 DROP TABLE IF EXISTS Depart_Location;
@@ -41,14 +42,14 @@ CREATE TABLE User_Address (
     Province VARCHAR(100) NOT NULL,
     Postal_code VARCHAR(20) NOT NULL,
     PRIMARY KEY (UserID, Street, City, Province, Postal_code),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Customer (
     UserID INT NOT NULL,
     SSN VARCHAR(20) NOT NULL,
     PRIMARY KEY (UserID),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID)
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Branch (
@@ -66,12 +67,26 @@ CREATE TABLE Employee (
     UserID INT NOT NULL,
     EmergencyNo VARCHAR(20),
     Role VARCHAR(50),
+    SSN VARCHAR(20) NOT NULL,
     BranchID INT,
     SupervisorID INT,
     PRIMARY KEY (UserID),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID),
-    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID),
-    FOREIGN KEY (SupervisorID) REFERENCES Employee(UserID)
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (SupervisorID) REFERENCES Employee(UserID) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+CREATE TABLE Assignment(
+    AssignmentID INT NOT NULL AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Description TEXT,
+    Status VARCHAR(50) NOT NULL DEFAULT 'Active',
+    Employee_UserID INT DEFAULT NULL,
+    DepartmentID INT NOT NULL,
+    Start_Date DATE NOT NULL,
+    PRIMARY KEY (AssignmentID),
+    FOREIGN KEY (Employee_UserID) REFERENCES Employee(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Dependent (
@@ -80,7 +95,7 @@ CREATE TABLE Dependent (
     Relationship VARCHAR(50),
     DOB DATE NOT NULL,
     PRIMARY KEY (UserID, Name, DOB),
-    FOREIGN KEY (UserID) REFERENCES Employee(UserID)
+    FOREIGN KEY (UserID) REFERENCES Employee(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Department (
@@ -90,15 +105,15 @@ CREATE TABLE Department (
     UserID INT,
     Start_Date DATE,
     PRIMARY KEY (DepartmentID),
-    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID),
-    FOREIGN KEY (UserID) REFERENCES Employee(UserID)
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES Employee(UserID) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Depart_Location (
     DepartmentID INT NOT NULL,
     Location VARCHAR(100) NOT NULL,
     PRIMARY KEY (DepartmentID, Location),
-    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Account (
@@ -113,22 +128,23 @@ CREATE TABLE Savings_acct (
     AccountID INT NOT NULL,
     Interest_rate DECIMAL(5,2),
     PRIMARY KEY (AccountID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Checking_acct (
     AccountID INT NOT NULL,
     Overdraft_limit DECIMAL(15,2),
     PRIMARY KEY (AccountID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Loan (
     Loan_No INT NOT NULL,
     Amount DECIMAL(15,2) NOT NULL,
     BranchID INT,
+    Status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     PRIMARY KEY (Loan_No),
-    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID)
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE Payee (
@@ -144,81 +160,161 @@ CREATE TABLE Transaction (
     Amount DECIMAL(15,2) NOT NULL,
     UserID INT,
     PRIMARY KEY (TransactionID),
-    FOREIGN KEY (UserID) REFERENCES `User`(UserID)
+    FOREIGN KEY (UserID) REFERENCES `User`(UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Transfer (
     TransactionID INT NOT NULL,
     PRIMARY KEY (TransactionID),
-    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID)
+    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Deposit (
 TransactionID INT NOT NULL,
 PRIMARY KEY (TransactionID),
-FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID)
+FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DElETE CASCADE ON UPDATE CASCADE
 );
 CREATE TABLE Withdraw (
 TransactionID INT NOT NULL,
 PRIMARY KEY (TransactionID),
-FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID)
+FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Owns (
     UserID INT NOT NULL,
     AccountID INT NOT NULL,
     PRIMARY KEY (UserID, AccountID),
-    FOREIGN KEY (UserID) REFERENCES Customer(UserID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (UserID) REFERENCES Customer(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Obtains (
     Customer_UserID INT NOT NULL,
     Loan_No INT NOT NULL,
     PRIMARY KEY (Customer_UserID, Loan_No),
-    FOREIGN KEY (Customer_UserID) REFERENCES Customer(UserID),
-    FOREIGN KEY (Loan_No) REFERENCES Loan(Loan_No)
+    FOREIGN KEY (Customer_UserID) REFERENCES Customer(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Loan_No) REFERENCES Loan(Loan_No) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Pays (
     UserID INT NOT NULL,
     Payee_id INT NOT NULL,
     PRIMARY KEY (UserID, Payee_id),
-    FOREIGN KEY (UserID) REFERENCES Customer(UserID),
-    FOREIGN KEY (Payee_id) REFERENCES Payee(Payee_id)
+    FOREIGN KEY (UserID) REFERENCES Customer(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Payee_id) REFERENCES Payee(Payee_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Logs (
     TransactionID INT NOT NULL,
     AccountID INT NOT NULL,
     PRIMARY KEY (TransactionID, AccountID),
-    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID),
-    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+    FOREIGN KEY (TransactionID) REFERENCES Transaction(TransactionID) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO `User` (UserID, Name, Phone, Email, Password_hash)
-VALUES (101, 'Farhan Sheikh', '555-0100', 'farhan@gmail.com','03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'),
-(102, 'Nabeel Furqan', '555-0101', 'nabeel@gmail.com','03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4');
+VALUES (101, 'Farhan Sheikh', '555-0100', 'farhan@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS'),
+(102, 'Nabeel Furqan', '555-0101', 'nabeel@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS'),
+(103, 'Minh Vu', '555-0102', 'minh@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS');
+
 INSERT INTO Branch (BranchID, Name, Phone, Street, City, Province, Postal_Code)
 VALUES (1, 'Downtown Branch', '555-9999', '123 Main St', 'Calgary', 'AB', 'T2N 2V1');
+
 INSERT INTO Customer (UserID, SSN)
 VALUES (101, '123-456-7890');
-INSERT INTO Employee (UserID, EmergencyNo, Role, BranchID, SupervisorID)
-VALUES (102, '555-0999', 'Teller', 1, NULL);
+
+INSERT INTO Employee (UserID, EmergencyNo, Role, BranchID, SupervisorID, SSN)
+VALUES (103, '555-0888', 'Manager', 1, NULL, '567-890-1234'),
+(102, '555-0999', 'Teller', 1, 103, '987-654-3210');
+
+INSERT INTO Assignment (Name, Description, Employee_UserID, DepartmentID, Start_Date)
+VALUES ('Customer Service Training', 'Training for new customer service representatives', 102, 1, '2025-01-15'),
+('Branch Management', 'Overseeing branch operations and staff', 103, 1, '2025-01-01'),
+('Loan Processing', 'Handling loan applications and approvals', NULL, 1, '2025-02-01');
+
+INSERT INTO Department (DepartmentID, Name, BranchID, UserID, Start_Date)
+VALUES (1, 'Customer Service', 1, 103, '2025-01-01');
+
 INSERT INTO Account (AccountID, Status, Balance, OpenDate)
-VALUES (5001, 'Active', 2500.00, '2026-03-15');
+VALUES (5001, 'Active', 2500.00, '2026-03-15'),
+(5002, 'Active', 1500.00, '2026-03-20');
+
+INSERT INTO Savings_acct (AccountID, Interest_rate)
+VALUES (5001, 1.50);
+
+INSERT INTO Checking_acct (AccountID, Overdraft_limit)
+VALUES (5002, 500.00);
+
 INSERT INTO Owns (UserID, AccountID)
-VALUES (101, 5001);
+VALUES (101, 5001),
+(101, 5002);
+
+UPDATE Account
+SET Balance = Balance + 500.00
+WHERE AccountID = 5001;
+
+INSERT INTO Depart_Location (DepartmentID, Location)
+VALUES (1, 'Second Floor');
+
+INSERT INTO Loan (Loan_No, Amount, BranchID)
+VALUES (101, 15000.00, 1),
+(102, 25000.00, 1);
+
+INSERT INTO Obtains (Customer_UserID, Loan_No)
+VALUES (101, 101),
+(101, 102);
+
+INSERT INTO Payee (Payee_id, Company_name)
+VALUES (1, 'Electric Company'),
+(2, 'Water Utility');
+
+INSERT INTO Pays (UserID, Payee_id)
+VALUES (101, 1),
+(101, 2);
+
+INSERT INTO Transaction (TransactionID, `Timestamp`, Amount, UserID)
+VALUES (1001, '2026-04-01 10:00:00', 200.00, 101),
+(1002, '2026-04-02 14:30:00', 150.00, 101),
+(1003, '2026-04-03 09:15:00', 300.00, 101);
+
+INSERT INTO Logs (TransactionID, AccountID)
+VALUES (1001, 5001),
+(1002, 5001);
+
+INSERT INTO Transfer (TransactionID)
+VALUES (1001);
+
+INSERT INTO Deposit (TransactionID)
+VALUES (1002);
+
+INSERT INTO Withdraw (TransactionID)
+VALUES (1003);
+
 SELECT u.Name, a.AccountID, a.Balance
 FROM `User` u
 JOIN Customer c ON u.UserID = c.UserID
 JOIN Owns o ON c.UserID = o.UserID
 JOIN Account a ON o.AccountID = a.AccountID
 WHERE u.UserID = 101;
-UPDATE Account
-SET Balance = Balance + 500.00
-WHERE AccountID = 5001;
-DELETE FROM Owns
-WHERE AccountID = 5001;
-DELETE FROM Account
-WHERE AccountID = 5001;
+
+SELECT * FROM `User`;
+SELECT * FROM User_Address;
+SELECT * FROM Customer;
+SELECT * FROM Branch;
+SELECT * FROM Employee;
+SELECT * FROM Dependent;
+SELECT * FROM Department;
+SELECT * FROM Depart_Location;
+SELECT * FROM Account;
+SELECT * FROM Savings_acct;
+SELECT * FROM Checking_acct;
+SELECT * FROM Loan;
+SELECT * FROM Payee;
+SELECT * FROM Transaction;
+SELECT * FROM Transfer;
+SELECT * FROM Deposit;
+SELECT * FROM Withdraw;
+SELECT * FROM Owns;
+SELECT * FROM Obtains;
+SELECT * FROM Pays;
+SELECT * FROM Logs;
