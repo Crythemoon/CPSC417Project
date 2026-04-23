@@ -6,77 +6,102 @@ const router = express.Router();
 
 async function requireManager(req, res, next) {
     try {
-        if (!req.user || !req.userId) {
+        if (!req.user?.userId) {
             return res.status(401).json({ error: 'Authentication required' });
-    }
+        }
 
-    const userId = req.userId;
-    const rows = await pool.execute(
-        'SELECT Role FROM Employee WHERE UserID = ?',
-        [userId]
-    );
-    const role = rows[0][0]?.Role;
+        const userId = req.user.userId;
+        const [rows] = await pool.execute(
+            'SELECT Role FROM Employee WHERE UserID = ?',
+            [userId]
+        );
+        const role = rows[0]?.Role;
 
-    if (!rows || rows.length === 0){
-        return res.status(403).json({ error: 'Employee access required' });
-    }
-    
-    if (rows[0].Role !== 'Manager') {
-        return res.status(403).json({ error: 'Manager access required' });
-    }
+        if (!rows || rows.length === 0){
+            return res.status(403).json({ error: 'Employee access required' });
+        }
+        
+        if (String(role).toLowerCase() !== 'manager') {
+            return res.status(403).json({ error: 'Manager access required' });
+        }
 
-    next();
-} catch (err) {
+        next();
+    } catch (err) {
         console.error('Manager Auth Failed:', err);
         return res.status(500).json({ error: 'Failed to verify authentication' });
     }
-};
+}
 
 // GET /api/manager/assignments — all employee assignments with details
-router.get('/assignments', requireAuth, async (req, res) => {
+router.get('/assignments', requireAuth, requireManager, async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const [employees] = await connection.execute(
-            `
-            SELECT
-                e.UserID As EmployeeID,
-                u.Name AS EmployeeName,
-                e.Role,
-                d.DepartmentID,
-                d.Name AS DepartmentName,
-                a.AssignmentID,
-                a.Name AS AssignmentName,
-                a.Description AS AssignmentDescription,
-                a.Status AS AssignmentStatus,
-                a.Start_Date AS StartDate
-            FROM Employee e
-            LEFT JOIN \`User\` u ON e.UserID = u.UserID
-            LEFT JOIN Assignment a ON e.UserID = a.Employee_UserID
-            LEFT JOIN Department d ON a.DepartmentID = d.DepartmentID
-            ORDER BY a.Start_Date DESC, e.UserID ASC
-            `
-        );
+        const [assignmentTable] = await connection.execute("SHOW TABLES LIKE 'Assignment'");
+        const hasAssignments = assignmentTable.length > 0;
+        let employees;
+        let unassignedAssignments;
 
-        const[unassignedAssignments] = await connection.execute(
-            `
-            SELECT
-                a.AssignmentID,
-                a.Name AS AssignmentName,
-                a.Description AS AssignmentDescription,
-                a.Status AS AssignmentStatus,
-                a.Start_Date AS StartDate,
-                d.DepartmentID,
-                d.Name AS DepartmentName
-            FROM Assignment a
-            LEFT JOIN Department d ON a.DepartmentID = d.DepartmentID
-            WHERE a.Employee_UserID IS NULL
-            ORDER BY a.Start_Date DESC
-            `
-        );
+        if (hasAssignments) {
+            [employees] = await connection.execute(
+                `
+                SELECT
+                    e.UserID As EmployeeID,
+                    u.Name AS EmployeeName,
+                    e.Role,
+                    d.DepartmentID,
+                    d.Name AS DepartmentName,
+                    a.AssignmentID,
+                    a.Name AS AssignmentTitle,
+                    a.Description AS AssignmentDescription,
+                    a.Status AS AssignmentStatus,
+                    a.Start_Date AS StartDate
+                FROM Employee e
+                LEFT JOIN \`User\` u ON e.UserID = u.UserID
+                LEFT JOIN Assignment a ON e.UserID = a.Employee_UserID
+                LEFT JOIN Department d ON a.DepartmentID = d.DepartmentID
+                ORDER BY a.Start_Date DESC, e.UserID ASC
+                `
+            );
+
+            [unassignedAssignments] = await connection.execute(
+                `
+                SELECT
+                    a.AssignmentID,
+                    a.Name AS AssignmentTitle,
+                    a.Description AS AssignmentDescription,
+                    a.Status AS AssignmentStatus,
+                    a.Start_Date AS StartDate,
+                    d.DepartmentID,
+                    d.Name AS DepartmentName
+                FROM Assignment a
+                LEFT JOIN Department d ON a.DepartmentID = d.DepartmentID
+                WHERE a.Employee_UserID IS NULL
+                ORDER BY a.Start_Date DESC
+                `
+            );
+        } else {
+            [employees] = await connection.execute(
+                `
+                SELECT
+                    e.UserID AS EmployeeID,
+                    u.Name AS EmployeeName,
+                    e.Role,
+                    NULL AS AssignmentID,
+                    NULL AS AssignmentTitle,
+                    NULL AS AssignmentDescription,
+                    NULL AS AssignmentStatus,
+                    NULL AS StartDate
+                FROM Employee e
+                LEFT JOIN \`User\` u ON e.UserID = u.UserID
+                ORDER BY e.UserID ASC
+                `
+            );
+            unassignedAssignments = [];
+        }
 
         res.json({ employees, unassignedAssignments });
-    } catch (error) {
+    } catch (err) {
         console.error("Failed to load manager assignments data:", err);
         res.status(500).json({ error: 'Failed to load manager assignments data' });
     } finally {
@@ -182,6 +207,8 @@ router.patch("/assignments/:assignmentId", requireAuth, requireManager, async (r
   }
 });
 
+module.exports = router;
+
 //GET /api/manager/employees — all employees with their current assignment (if any)
 router.get("/employees", requireAuth, requireManager, async (req, res) => {
   let connection;
@@ -276,4 +303,3 @@ router.patch("/employees/:userId", requireAuth, requireManager, async (req, res)
     if (connection) connection.release();
   }
 });
-

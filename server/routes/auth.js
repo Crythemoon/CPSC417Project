@@ -63,7 +63,8 @@ router.post("/login", loginRateLimiter, async (req, res) => {
 
     let role = "customer";
     if (customerCheck.length === 0 && employeeCheck.length > 0) {
-      role = employeeCheck[0].Role?.toLowerCase() === "manager" ? "manager" : "employee";
+      const employeeRole = String(employeeCheck[0].Role ?? "").trim().toLowerCase();
+      role = employeeRole === "manager" ? "manager" : "employee";
     } else if (customerCheck.length === 0) {
       return res.status(403).json({ error: "Not a recognized account" });
     }

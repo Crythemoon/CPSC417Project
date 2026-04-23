@@ -50,7 +50,7 @@ app.use('/api/employee/profile',      require('./routes/employee_profile'));
 app.use('/api/employee/create-account', require('./routes/employee_create_account'));
 
 // Manager routes
-app.use('/api/manager/assignments', require('./routes/manager_assignment'));
+app.use('/api/manager', require('./routes/manager_assignment'));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

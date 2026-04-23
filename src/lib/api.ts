@@ -8,6 +8,14 @@ export async function apiFetch(path: string, options?: RequestInit) {
       ...options?.headers,
     },
   });
+
+  let data: unknown = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
   if (res.status === 401) {
     const user = localStorage.getItem("user");
     const role = user ? JSON.parse(user).role : null;
@@ -16,5 +24,14 @@ export async function apiFetch(path: string, options?: RequestInit) {
       : "/login";
     throw new Error("Unauthorized");
   }
-  return res.json();
+
+  if (!res.ok) {
+    const message =
+      typeof data === "object" && data !== null && "error" in data && typeof data.error === "string"
+        ? data.error
+        : `Request failed with status ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data;
 }

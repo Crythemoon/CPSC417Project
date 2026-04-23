@@ -28,15 +28,39 @@ router.get("/", requireAuth, requireRole("employee", "manager"), async (req, res
   }
 });
 
-// PATCH /api/employee/loans/:id — update loan status
-router.patch("/:id", requireAuth, requireRole("manager"), async (req, res) => {
+// PATCH /api/employee/loans/:id — employee review step or manager decision
+router.patch("/:id", requireAuth, requireRole("employee", "manager"), async (req, res) => {
   try {
     const loanNo = Number(req.params.id);
     const { status } = req.body;
-    const allowed = ["Pending", "Approved", "Rejected", "Under Review"];
-    if (!status || !allowed.includes(status)) {
-      return res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
+    const role = req.user?.role;
+
+    const [existing] = await pool.execute(
+      "SELECT Status FROM Loan WHERE Loan_No = ?",
+      [loanNo]
+    );
+    if (existing.length === 0) {
+      return res.status(404).json({ error: "Loan not found" });
     }
+
+    const currentStatus = existing[0].Status;
+
+    if (role === "employee") {
+      if (status !== "Under Review") {
+        return res.status(403).json({ error: "Employees can only move loans to Under Review" });
+      }
+      if (currentStatus !== "Pending") {
+        return res.status(409).json({ error: "Only pending loans can be moved to Under Review" });
+      }
+    } else if (role === "manager") {
+      const allowed = ["Approved", "Rejected"];
+      if (!status || !allowed.includes(status)) {
+        return res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
+      }
+    } else {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const [result] = await pool.execute(
       "UPDATE Loan SET Status = ? WHERE Loan_No = ?",
       [status, loanNo]

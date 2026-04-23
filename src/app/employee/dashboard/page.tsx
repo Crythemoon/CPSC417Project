@@ -40,7 +40,7 @@ function txBadge(type: string) {
 }
 
 const managerTasks = [
-  { title: "Loan overrides", detail: "Change or override loan decisions when elevated approval is needed.", action: "Open overrides", href: "/employee/manager" },
+  { title: "Assignment tools", detail: "View employees, current assignments, and unassigned work from the manager workspace.", action: "Open manager tools", href: "/employee/manager" },
   { title: "Create staff account", detail: "Set up login credentials, assign a role and branch, and add dependent info for a new employee.", action: "Create employee account", href: "/employee/create-account" },
 ];
 
@@ -53,7 +53,13 @@ export default function EmployeeDashboardPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setUser({
+        ...parsed,
+        role: typeof parsed.role === "string" ? parsed.role.trim().toLowerCase() : "",
+      });
+    }
 
     Promise.all([
       apiFetch("/api/employee/transactions"),
@@ -192,22 +198,23 @@ export default function EmployeeDashboardPage() {
             </Link>
           </div>
 
-          {/* Manager tools */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-slate-600">Manager tools</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight">Additional management controls</h2>
-            <div className="mt-6 space-y-4">
-              {managerTasks.map((item) => (
-                <article key={item.title} className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                  <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
-                  <Link href={item.href} className="mt-4 inline-flex rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900">
-                    {item.action}
-                  </Link>
-                </article>
-              ))}
+          {user?.role === "manager" && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-sm font-medium text-slate-600">Manager tools</p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-tight">Additional management controls</h2>
+              <div className="mt-6 space-y-4">
+                {managerTasks.map((item) => (
+                  <article key={item.title} className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                    <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+                    <Link href={item.href} className="mt-4 inline-flex rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-900 hover:text-slate-900">
+                      {item.action}
+                    </Link>
+                  </article>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </EmployeePortal>
