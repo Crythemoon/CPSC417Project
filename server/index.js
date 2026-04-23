@@ -49,8 +49,8 @@ app.use('/api/employee/loans',        require('./routes/employee_loans'));
 app.use('/api/employee/profile',      require('./routes/employee_profile'));
 app.use('/api/employee/create-account', require('./routes/employee_create_account'));
 
-// Manager routes (loans with full list — reuse employee_loans)
-app.use('/api/manager/loans', require('./routes/employee_loans'));
+// Manager routes
+app.use('/api/manager/assignments', require('./routes/manager_assignment'));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
