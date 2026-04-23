@@ -54,7 +54,7 @@ export default function EmployeeLoginPage() {
     <main className="min-h-screen text-slate-900" style={{ background: "var(--paper)" }}>
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8 sm:px-8 lg:px-10">
         <header className="flex items-center justify-between border-b border-slate-200 pb-5">
-          <div className="keel-wordmark" style={{ fontSize: 20 }}>Our Bank Name</div>
+          <div className="keel-wordmark" style={{ fontSize: 20 }}>Keel</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <ThemeToggleIcon />
             <Link href="/login" className="keel-btn ghost" style={{ padding: "8px 16px" }}>Customer sign in</Link>

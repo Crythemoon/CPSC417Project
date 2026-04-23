@@ -109,7 +109,7 @@ export default function PortalShell({
   }
 
   const isEmployee = pathname.startsWith("/employee");
-  const wordmark = isEmployee ? "Our Bank — Staff" : "Our Bank Name";
+  const wordmark = isEmployee ? "Keel — Staff" : "Keel";
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh", background: "var(--paper)" }}>
