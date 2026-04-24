@@ -446,25 +446,3 @@ DELIMITER ;
 
 SET FOREIGN_KEY_CHECKS=1;
 
-SELECT * FROM `User`;
-SELECT * FROM User_Address;
-SELECT * FROM Customer;
-SELECT * FROM Branch;
-SELECT * FROM Employee;
-SELECT * FROM Dependent;
-SELECT * FROM Department;
-SELECT * FROM Depart_Location;
-SELECT * FROM Account;
-SELECT * FROM Savings_acct;
-SELECT * FROM Checking_acct;
-SELECT * FROM Loan;
-SELECT * FROM Payee;
-SELECT * FROM Transaction;
-SELECT * FROM Transfer;
-SELECT * FROM Deposit;
-SELECT * FROM Withdraw;
-SELECT * FROM Owns;
-SELECT * FROM Obtains;
-SELECT * FROM Pays;
-SELECT * FROM Logs;
-
