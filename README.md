@@ -78,11 +78,11 @@ Open `http://localhost:3000` in your browser.
 
 ## Test Accounts
 
-| Role     | Email              | Password |
-|----------|--------------------|----------|
-| Customer | farhan@gmail.com   | password |
-| Employee | nabeel@gmail.com   | password |
-| Manager  | emma@email.com     | password |
+| Role     | Email            | Password |
+|----------|------------------|----------|
+| Customer | alice@email.com  | password |
+| Employee | carol@email.com  | password |
+| Manager  | emma@email.com   | password |
 
 Customer login is at `/login`, employee/manager login is at `/employee/login`.
 

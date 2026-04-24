@@ -2,6 +2,8 @@ DROP DATABASE IF EXISTS BankDB;
 CREATE DATABASE IF NOT EXISTS BankDB;
 USE BankDB;
 
+SET FOREIGN_KEY_CHECKS=0;
+
 DROP TABLE IF EXISTS `User`;
 DROP TABLE IF EXISTS User_Address;
 DROP TABLE IF EXISTS Customer;
@@ -141,7 +143,6 @@ CREATE TABLE Checking_acct (
 CREATE TABLE Loan (
     Loan_No INT NOT NULL AUTO_INCREMENT,
     Amount DECIMAL(15,2) NOT NULL,
-    Status VARCHAR(50) DEFAULT 'Pending',
     BranchID INT,
     Status VARCHAR(50) NOT NULL DEFAULT 'Pending',
     PRIMARY KEY (Loan_No),
@@ -219,17 +220,23 @@ CREATE TABLE Logs (
 INSERT INTO `User` (UserID, Name, Phone, Email, Password_hash)
 VALUES (101, 'Farhan Sheikh', '555-0100', 'farhan@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS'),
 (102, 'Nabeel Furqan', '555-0101', 'nabeel@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS'),
-(103, 'Minh Vu', '555-0102', 'minh@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS');
+(103, 'Minh Vu', '555-0102', 'minh@gmail.com','$2a$12$P1PK2OtAXibafgS4.aoCBuymsgDwMhwIXge8Rz0XMegJ4fHTVpFlS'),
+(104, 'Alice Johnson', '403-111-0001', 'alice@email.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+(105, 'Carol White', '403-111-0003', 'carol@email.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+(106, 'Emma Davis', '403-111-0004', 'emma@email.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
 
 INSERT INTO Branch (BranchID, Name, Phone, Street, City, Province, Postal_Code)
 VALUES (1, 'Downtown Branch', '555-9999', '123 Main St', 'Calgary', 'AB', 'T2N 2V1');
 
 INSERT INTO Customer (UserID, SSN)
-VALUES (101, '123-456-7890');
+VALUES (101, '123-456-7890'),
+(104, '111-222-3333');
 
 INSERT INTO Employee (UserID, EmergencyNo, Role, BranchID, SupervisorID, SSN)
 VALUES (103, '555-0888', 'Manager', 1, NULL, '567-890-1234'),
-(102, '555-0999', 'Teller', 1, 103, '987-654-3210');
+(102, '555-0999', 'Teller', 1, 103, '987-654-3210'),
+(106, '403-555-0001', 'Manager', 1, NULL, '111-111-1111'),
+(105, '403-555-0002', 'Teller', 1, 106, '222-222-2222');
 
 INSERT INTO Assignment (Name, Description, Employee_UserID, DepartmentID, Start_Date)
 VALUES ('Customer Service Training', 'Training for new customer service representatives', 102, 1, '2025-01-15'),
@@ -249,9 +256,16 @@ VALUES (5001, 1.50);
 INSERT INTO Checking_acct (AccountID, Overdraft_limit)
 VALUES (5002, 500.00);
 
+INSERT INTO Account (AccountID, Status, Balance, OpenDate)
+VALUES (5003, 'Active', 1000.00, '2026-01-01');
+
+INSERT INTO Savings_acct (AccountID, Interest_rate)
+VALUES (5003, 1.50);
+
 INSERT INTO Owns (UserID, AccountID)
 VALUES (101, 5001),
-(101, 5002);
+(101, 5002),
+(104, 5003);
 
 UPDATE Account
 SET Balance = Balance + 500.00
@@ -429,6 +443,8 @@ END //
 
 DELIMITER ;
 
+
+SET FOREIGN_KEY_CHECKS=1;
 
 SELECT * FROM `User`;
 SELECT * FROM User_Address;
